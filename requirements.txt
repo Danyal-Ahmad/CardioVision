@@ -1,0 +1,9 @@
+django>=4.2,<5.0
+tflite-runtime
+librosa
+numpy
+matplotlib
+soundfile
+scipy
+joblib
+Pillow

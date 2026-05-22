@@ -1,0 +1,342 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioVision — Heart Sound Classification</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'analyzer/css/style.css' %}">
+</head>
+<body>
+
+    <!-- TOP NAVBAR -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="#" class="topbar-brand" onclick="CV.goHome();return false;">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+                <span class="brand-name">CardioVision</span>
+            </a>
+            <nav class="topbar-nav">
+                <button class="nav-link active" data-page="home" onclick="CV.goHome()">
+                    <i data-lucide="home" style="width:15px;height:15px"></i>
+                    Home
+                </button>
+                <button class="nav-link" data-page="record" onclick="CV.goToCapture()">
+                    <i data-lucide="mic" style="width:15px;height:15px"></i>
+                    Record
+                </button>
+                <button class="nav-link" data-page="upload" onclick="CV.goToUpload()">
+                    <i data-lucide="upload" style="width:15px;height:15px"></i>
+                    Upload
+                </button>
+            </nav>
+            <div class="topbar-right">
+                <div class="mic-selector">
+                    <i data-lucide="mic" style="width:14px;height:14px"></i>
+                    <select id="micSelect"><option value="">Default</option></select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-nav">
+        <button class="mob-nav-btn active" data-page="home" onclick="CV.goHome()">
+            <i data-lucide="home" style="width:18px;height:18px"></i>
+            <span>Home</span>
+        </button>
+        <button class="mob-nav-btn" data-page="record" onclick="CV.goToCapture()">
+            <i data-lucide="mic" style="width:18px;height:18px"></i>
+            <span>Record</span>
+        </button>
+        <button class="mob-nav-btn" data-page="upload" onclick="CV.goToUpload()">
+            <i data-lucide="upload" style="width:18px;height:18px"></i>
+            <span>Upload</span>
+        </button>
+    </nav>
+
+    <!-- 3D HEART BACKGROUND -->
+    <div class="heart-bg" id="heart3dContainer"></div>
+
+    <!-- PAGE: HOME -->
+    <div class="page active" id="pageHome">
+        <section class="hero">
+            <div class="hero-inner">
+                <div class="hero-label">
+                    <span class="label-dot"></span>
+                    Deep Learning Diagnostic System
+                </div>
+                <h1 class="hero-h1">
+                    Heart Sound<br>
+                    <span class="hero-accent">Classification</span>
+                </h1>
+                <p class="hero-p">
+                    Record or upload a heartbeat audio sample for instant AI-powered classification.
+                    Built with TensorFlow Lite CNN trained on clinical phonocardiogram data.
+                </p>
+                <div class="hero-actions">
+                    <button class="btn btn-red" onclick="CV.goToCapture()">
+                        <i data-lucide="radio" style="width:16px;height:16px"></i>
+                        Record Heartbeat
+                    </button>
+                    <button class="btn btn-dark" onclick="CV.goToUpload()">
+                        <i data-lucide="upload" style="width:16px;height:16px"></i>
+                        Upload File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats ribbon -->
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-val">5</div>
+                    <div class="hero-stat-label">Classifications</div>
+                </div>
+                <div class="hero-stat-sep"></div>
+                <div class="hero-stat">
+                    <div class="hero-stat-val">CNN</div>
+                    <div class="hero-stat-label">Model Type</div>
+                </div>
+                <div class="hero-stat-sep"></div>
+                <div class="hero-stat">
+                    <div class="hero-stat-val">224x224</div>
+                    <div class="hero-stat-label">Mel-Spectrogram</div>
+                </div>
+                <div class="hero-stat-sep"></div>
+                <div class="hero-stat">
+                    <div class="hero-stat-val">TFLite</div>
+                    <div class="hero-stat-label">Runtime</div>
+                </div>
+            </div>
+        </section>
+
+        <main class="main">
+            <!-- Capture Cards -->
+            <section class="section">
+                <h2 class="section-title">Capture Heart Sound</h2>
+                <p class="section-desc">Choose your preferred input method</p>
+                <div class="capture-grid">
+                    <div class="capture-card" onclick="CV.goToCapture()">
+                        <div class="capture-icon-wrap capture-icon-red">
+                            <i data-lucide="mic" style="width:24px;height:24px"></i>
+                        </div>
+                        <h3>Record Live</h3>
+                        <p>Place microphone on the left side of your chest and record a 5-second heartbeat sample.</p>
+                        <span class="capture-cta">Start Recording <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+                    </div>
+                    <div class="capture-card" onclick="CV.goToUpload()">
+                        <div class="capture-icon-wrap capture-icon-slate">
+                            <i data-lucide="file-audio" style="width:24px;height:24px"></i>
+                        </div>
+                        <h3>Upload Audio</h3>
+                        <p>Upload an existing heart sound recording in WAV, MP3, or WebM format for analysis.</p>
+                        <span class="capture-cta">Browse Files <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How it works -->
+            <section class="section">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-desc">Three simple steps to classify your heart sound</p>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-num">01</div>
+                        <div class="step-body">
+                            <h3>Record or Upload</h3>
+                            <p>Capture a 5-second heartbeat sample using your microphone or upload an existing audio file.</p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">02</div>
+                        <div class="step-body">
+                            <h3>AI Analysis</h3>
+                            <p>The audio is converted into a mel-spectrogram and processed by our deep learning CNN model.</p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">03</div>
+                        <div class="step-body">
+                            <h3>Get Results</h3>
+                            <p>Receive an instant classification with detailed report, playable audio, and downloadable PDF.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History -->
+            <section class="section">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Analysis History</h2>
+                        <p class="section-desc">Previous classifications</p>
+                    </div>
+                    <span class="badge" id="historyCount">0</span>
+                </div>
+                <div class="history-list" id="historyContainer">
+                    <div class="history-empty" id="historyEmpty">
+                        <i data-lucide="inbox" style="width:36px;height:36px"></i>
+                        <p>No analyses yet</p>
+                        <span>Record or upload your first heart sound to begin</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;color:var(--red)"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <span>CardioVision</span>
+                </div>
+                <p class="footer-note">AI-assisted diagnostic tool. Not a substitute for professional medical advice.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- PAGE: RECORD -->
+    <div class="page" id="pageRecord">
+        <section class="sub-page">
+            <button class="back-btn" onclick="CV.goHome()">
+                <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+                Back
+            </button>
+
+            <div class="sub-card">
+                <h2 class="sub-title">Record Heart Sound</h2>
+                <p class="sub-desc">Press the record button and place your mic on the left side of your chest</p>
+
+                <!-- Mic permission notice -->
+                <div class="mic-notice" id="micNotice">
+                    <i data-lucide="info" style="width:14px;height:14px"></i>
+                    <span>Microphone access is requested only when you press record. Allow mic permission in your browser to continue.</span>
+                </div>
+
+                <div class="visualizer" id="freqVisualizer">
+                    <div class="freq-bars" id="freqBars"></div>
+                    <div class="wave-canvas-wrap">
+                        <canvas id="liveWaveCanvas"></canvas>
+                    </div>
+                    <div class="viz-status" id="liveWaveTag">
+                        <span class="status-dot"></span> READY
+                    </div>
+                </div>
+
+                <div class="record-controls">
+                    <div class="timer-block">
+                        <div class="timer" id="recTimer">00:00</div>
+                        <div class="timer-limit">/ 00:05</div>
+                    </div>
+                    <div class="record-btns">
+                        <button class="rec-btn" id="btnStartRec" onclick="CV.startRecording()">
+                            <span class="rec-ripple"></span>
+                            <i data-lucide="circle" style="width:20px;height:20px"></i>
+                        </button>
+                        <button class="stop-btn" id="btnStopRec" onclick="CV.stopRecording()" disabled>
+                            <i data-lucide="square" style="width:16px;height:16px"></i>
+                        </button>
+                    </div>
+                    <div class="record-hint">
+                        <i data-lucide="shield-check" style="width:13px;height:13px"></i>
+                        Mic on left chest, stay still, quiet room
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- PAGE: UPLOAD -->
+    <div class="page" id="pageUpload">
+        <section class="sub-page">
+            <button class="back-btn" onclick="CV.goHome()">
+                <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+                Back
+            </button>
+
+            <div class="sub-card">
+                <h2 class="sub-title">Upload Heart Audio</h2>
+                <p class="sub-desc">Select or drag a heartbeat audio file</p>
+
+                <div class="dropzone" id="dropzone">
+                    <div class="dz-content">
+                        <div class="dz-icon">
+                            <i data-lucide="file-up" style="width:36px;height:36px"></i>
+                        </div>
+                        <p class="dz-text">Drag file here or <span class="dz-link">click to browse</span></p>
+                        <span class="dz-formats">WAV, MP3, WebM, OGG — Max 15 MB</span>
+                    </div>
+                    <input type="file" id="fileInput" accept="audio/*" hidden>
+                </div>
+
+                <div class="file-info hidden" id="filePreview">
+                    <div class="file-row">
+                        <div class="file-detail">
+                            <div class="file-ico"><i data-lucide="file-audio" style="width:14px;height:14px"></i></div>
+                            <span id="uploadFilename">audio.wav</span>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-icon" onclick="CV.clearUpload()" title="Remove">
+                                <i data-lucide="x" style="width:14px;height:14px"></i>
+                            </button>
+                            <button class="btn btn-red btn-sm" onclick="CV.analyzeUpload()">
+                                <i data-lucide="scan" style="width:14px;height:14px"></i>
+                                Analyze
+                            </button>
+                        </div>
+                    </div>
+                    <div class="waveform-box">
+                        <canvas id="uploadWaveCanvas"></canvas>
+                        <div class="viz-status"><span class="status-dot green"></span> LOADED</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- PAGE: RESULTS -->
+    <div class="page" id="pageResults">
+        <section class="sub-page">
+            <button class="back-btn" onclick="CV.goHome()">
+                <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+                Back
+            </button>
+            <div class="result-wrap" id="reportContent"></div>
+        </section>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-stack" id="toastContainer"></div>
+
+    <!-- LOADING OVERLAY -->
+    <div class="loader-overlay" id="loadingOverlay">
+        <div class="loader-card">
+            <div class="loader-heart">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <canvas class="loader-ecg" id="loadingEcgCanvas"></canvas>
+            <p class="loader-text">Analyzing heart sound...</p>
+        </div>
+    </div>
+
+    <!-- PDF TEMPLATE (hidden) -->
+    <div id="pdfTemplate" style="position:fixed;left:-9999px;top:0;width:1100px;background:#fff;padding:0;font-family:'Inter',sans-serif;color:#1a1a2e;">
+        <div id="pdfInner"></div>
+    </div>
+
+    <script src="{% static 'analyzer/js/three-heart.js' %}"></script>
+    <script src="{% static 'analyzer/js/app.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "9f3611e1-40b",
+    "filename": "cv_20260523_004332_cc4270a3.wav",
+    "audio_url": "/media/heartbeat_audio/cv_20260523_004332_cc4270a3.wav",
+    "spec_url": "/media/spectrograms/cv_20260523_004332_cc4270a3.png",
+    "label": "artifact",
+    "confidence": 99.9,
+    "all_scores": {
+      "artifact": 99.9,
+      "extrahls": 0.1,
+      "extrastole": 0.0,
+      "murmur": 0.0,
+      "normal": 0.0
+    },
+    "explanation": "The recorded audio contains significant noise or artifacts. This could be due to movement, clothing friction, or improper mic placement.",
+    "recommendation": "Please re-record in a quiet environment with the mic placed firmly on the chest.",
+    "timestamp": "2026-05-23 00:44:10"
+  }
+]
